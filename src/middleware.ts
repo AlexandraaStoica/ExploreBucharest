@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export function middleware(request: NextRequest) {
-  return NextResponse.next()
-}
+export default clerkMiddleware((auth, req) => {
+  return NextResponse.next();
+});
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
-}
+  matcher: [
+    "/((?!_next|.*\\..*).*)", // Match all routes except static files and _next
+  ],
+};

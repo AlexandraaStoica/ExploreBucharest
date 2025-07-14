@@ -1,0 +1,2 @@
+CREATE TYPE "public"."location_category" AS ENUM('cultural', 'food&drink', 'activities', 'nightlife');--> statement-breakpoint
+ALTER TABLE "locations" ADD COLUMN "category" "location_category" NOT NULL;

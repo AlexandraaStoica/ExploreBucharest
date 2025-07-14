@@ -1,7 +1,23 @@
 import { pgTable, uuid, text, timestamp, decimal, integer, date, boolean, pgEnum } from "drizzle-orm/pg-core"
 
 // Enums
-export const categoryEnum = pgEnum("category", [
+export const friendshipStatusEnum = pgEnum("friendship_status", ["pending", "accepted", "rejected"])
+
+export const inviteStatusEnum = pgEnum("invite_status", ["pending", "accepted", "declined"])
+
+export const roleEnum = pgEnum("role", ["owner", "editor", "viewer"])
+
+export const targetTypeEnum = pgEnum("target_type", ["event", "location"])
+
+export const mainCategoryEnum = pgEnum("main_category", [
+  "events",
+  "activities",
+  "food&drink",
+  "nightlife",
+  "culture"
+]);
+
+export const subCategoryEnum = pgEnum("sub_category", [
   "festival",
   "concert",
   "exhibition",
@@ -14,15 +30,14 @@ export const categoryEnum = pgEnum("category", [
   "monument",
   "gallery",
   "activity"
-])
+]);
 
-export const friendshipStatusEnum = pgEnum("friendship_status", ["pending", "accepted", "rejected"])
-
-export const inviteStatusEnum = pgEnum("invite_status", ["pending", "accepted", "declined"])
-
-export const roleEnum = pgEnum("role", ["owner", "editor", "viewer"])
-
-export const targetTypeEnum = pgEnum("target_type", ["event", "location"])
+export const locationCategoryEnum = pgEnum("location_category", [
+  "cultural",
+  "food&drink",
+  "activities",
+  "nightlife"
+]);
 
 // Tables
 export const users = pgTable("users", {
@@ -41,18 +56,20 @@ export const locations = pgTable("locations", {
   latitude: decimal("latitude", { precision: 10, scale: 8 }).notNull(),
   longitude: decimal("longitude", { precision: 11, scale: 8 }).notNull(),
   imageUrl: text("image_url"),
+  category: locationCategoryEnum("category").notNull(),
 })
 
 export const events = pgTable("events", {
   id: uuid("id").primaryKey().defaultRandom(),
-  title: text("title").notNull(),
+  title: text("title").notNull().unique(), // Ensure unique event titles
   description: text("description"),
   startDatetime: timestamp("start_datetime").notNull(),
   endDatetime: timestamp("end_datetime").notNull(),
   locationId: uuid("location_id")
     .references(() => locations.id)
     .notNull(),
-  category: categoryEnum("category").notNull(),
+  mainCategory: mainCategoryEnum("main_category").notNull(),
+  subCategory: subCategoryEnum("sub_category").notNull(),
   imageUrl: text("image_url"),
   price: decimal("price", { precision: 10, scale: 2 }).default("0").notNull(),
   capacity: integer("capacity"),
@@ -162,4 +179,12 @@ export const groupItineraryItems = pgTable("group_itinerary_items", {
   addedByUserId: uuid("added_by_user_id")
     .references(() => users.id)
     .notNull(),
+})
+
+export const questions = pgTable("questions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email"),
+  question: text("question").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 })
