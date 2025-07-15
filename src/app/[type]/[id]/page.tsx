@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "components/ui/button";
+import { useUser } from "@clerk/nextjs";
 
 function GoogleMap({ lat, lng, title }: { lat: number; lng: number; title: string }) {
   useEffect(() => {
@@ -54,12 +55,20 @@ function GoogleMap({ lat, lng, title }: { lat: number; lng: number; title: strin
 export default function DetailsPage() {
   const params = useParams();
   const { type, id } = params as { type: string; id: string };
+  const { isSignedIn, user } = useUser();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [buying, setBuying] = useState(false);
   const [buySuccess, setBuySuccess] = useState<string | null>(null);
   const [buyError, setBuyError] = useState<string | null>(null);
+  // Reviews state
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -83,13 +92,20 @@ export default function DetailsPage() {
     if (id && type) fetchData();
   }, [id, type]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-burgundy text-xl">Loading...</div>;
-  if (error) return <div className="min-h-screen flex items-center justify-center text-red-700 text-xl">{error}</div>;
-  if (!data) return null;
-
-  // Extract lat/lng for map
-  const lat = parseFloat(data.latitude || data.lat);
-  const lng = parseFloat(data.longitude || data.lng);
+  // Fetch reviews
+  useEffect(() => {
+    async function fetchReviews() {
+      setReviewsLoading(true);
+      const res = await fetch(`/api/reviews?targetId=${id}`);
+      if (res.ok) {
+        setReviews(await res.json());
+      } else {
+        setReviews([]);
+      }
+      setReviewsLoading(false);
+    }
+    if (id) fetchReviews();
+  }, [id]);
 
   async function handleBuyTicket() {
     setBuying(true);
@@ -113,6 +129,41 @@ export default function DetailsPage() {
       setBuying(false);
     }
   }
+
+  async function handleReviewSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setReviewError("");
+    setReviewSubmitting(true);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetId: id, rating: reviewRating, comment: reviewText })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setReviewError(err.error || "Failed to submit review.");
+      } else {
+        setReviewText("");
+        setReviewRating(0);
+        // Refresh reviews
+        const reviewsRes = await fetch(`/api/reviews?targetId=${id}`);
+        setReviews(reviewsRes.ok ? await reviewsRes.json() : []);
+      }
+    } catch {
+      setReviewError("Failed to submit review.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-burgundy text-xl">Loading...</div>;
+  if (error) return <div className="min-h-screen flex items-center justify-center text-red-700 text-xl">{error}</div>;
+  if (!data) return null;
+
+  // Extract lat/lng for map
+  const lat = parseFloat(data.latitude || data.lat);
+  const lng = parseFloat(data.longitude || data.lng);
 
   return (
     <div className="min-h-screen bg-cream px-6 py-12">
@@ -152,6 +203,57 @@ export default function DetailsPage() {
               {buyError && <div className="text-red-700 mt-2">{buyError}</div>}
             </>
           )}
+          {/* Reviews Section */}
+          <div className="mt-10">
+            <h2 className="text-2xl font-bold text-burgundy font-display mb-4">Reviews</h2>
+            {reviewsLoading ? (
+              <div className="text-burgundy">Loading reviews...</div>
+            ) : reviews.length === 0 ? (
+              <div className="text-burgundy/70">No reviews yet.</div>
+            ) : (
+              <ul className="space-y-4 mb-6">
+                {reviews.map((r) => (
+                  <li key={r.id} className="border-b pb-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-burgundy">{r.rating}★</span>
+                      <span className="text-gray-600 text-sm">{new Date(r.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="text-gray-800">{r.comment}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {isSignedIn && (
+              <form onSubmit={handleReviewSubmit} className="bg-cream rounded-lg p-4 mb-2">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="font-semibold text-burgundy">Your Rating:</span>
+                  {[1,2,3,4,5].map((star) => (
+                    <button
+                      type="button"
+                      key={star}
+                      className={star <= reviewRating ? "text-yellow-500" : "text-gray-300"}
+                      onClick={() => setReviewRating(star)}
+                      aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  className="w-full border rounded px-3 py-2 mb-2"
+                  placeholder="Write your review..."
+                  value={reviewText}
+                  onChange={e => setReviewText(e.target.value)}
+                  rows={3}
+                  required
+                />
+                {reviewError && <div className="text-red-600 mb-2">{reviewError}</div>}
+                <Button type="submit" className="bg-burgundy text-white" disabled={reviewSubmitting || reviewRating === 0}>
+                  {reviewSubmitting ? "Submitting..." : "Submit Review"}
+                </Button>
+              </form>
+            )}
+          </div>
         </div>
         {/* Map */}
         <div className="bg-white rounded-xl shadow p-6 flex flex-col">
