@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { Button } from "components/ui/button";
 
 function GoogleMap({ lat, lng, title }: { lat: number; lng: number; title: string }) {
   useEffect(() => {

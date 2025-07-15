@@ -171,8 +171,8 @@ export default function SearchPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
               {filteredLocations.map(location => (
                 <a key={location.id} href={`/location/${location.id}`} target="_blank" rel="noopener noreferrer">
-                  <Card className="overflow-hidden hover:shadow-lg transition-shadow bg-white">
-                    <div className="aspect-video bg-gray-200 relative">
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow bg-white w-full h-96 flex flex-col">
+                    <div className="w-full h-48 bg-gray-200 rounded-t-lg overflow-hidden flex items-center justify-center relative">
                       <img
                         src={location.imageUrl || "/placeholder.svg?height=200&width=300&query=bucharest+landmark"}
                         alt={location.name}
@@ -183,18 +183,20 @@ export default function SearchPage() {
                         <span className="text-sm font-medium">4.7</span>
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold text-burgundy mb-2 font-display">{location.name}</h3>
-                    <div className="flex items-center text-gray-600 mb-4">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      <span>{location.address}</span>
-                    </div>
-                    <p className="text-gray-600 mb-4 text-sm line-clamp-2">{location.description}</p>
-                    <Button
-                      variant="outline"
-                      className="w-full border-burgundy text-burgundy hover:bg-burgundy/5 bg-transparent"
-                    >
-                      Learn More
-                    </Button>
+                    <CardContent className="p-4 flex-1 flex flex-col">
+                      <h3 className="text-xl font-bold text-burgundy mb-2 font-display">{location.name}</h3>
+                      <div className="flex items-center text-gray-600 mb-2">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span>{location.address}</span>
+                      </div>
+                      <p className="text-gray-600 mb-4 text-sm line-clamp-2 flex-1">{location.description}</p>
+                      <Button
+                        variant="outline"
+                        className="w-full border-burgundy text-burgundy hover:bg-burgundy/5 bg-transparent mt-auto"
+                      >
+                        Learn More
+                      </Button>
+                    </CardContent>
                   </Card>
                 </a>
               ))}
@@ -204,8 +206,8 @@ export default function SearchPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEvents.map(event => (
                 <a key={event.id} href={`/event/${event.id}`} target="_blank" rel="noopener noreferrer">
-                  <Card className="overflow-hidden hover:shadow-lg transition-shadow bg-white">
-                    <div className="aspect-video bg-gray-200 relative">
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow bg-white w-full h-96 flex flex-col">
+                    <div className="w-full h-48 bg-gray-200 rounded-t-lg overflow-hidden flex items-center justify-center relative">
                       <img
                         src={event.imageUrl || "/placeholder.svg?height=200&width=300&query=event"}
                         alt={event.title}
@@ -215,21 +217,23 @@ export default function SearchPage() {
                         <span className="bg-burgundy text-white px-3 py-1 rounded-full text-sm">{event.subCategory}</span>
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold text-burgundy mb-2 font-display">{event.title}</h3>
-                    <div className="flex items-center text-gray-600 mb-2">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      <span>{new Date(event.startDatetime).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center text-gray-600 mb-4">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      <span>Location</span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="w-full border-burgundy text-burgundy hover:bg-burgundy/5 bg-transparent"
-                    >
-                      Learn More
-                    </Button>
+                    <CardContent className="p-4 flex-1 flex flex-col">
+                      <h3 className="text-xl font-bold text-burgundy mb-2 font-display">{event.title}</h3>
+                      <div className="flex items-center text-gray-600 mb-2">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>{new Date(event.startDatetime).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600 mb-4">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span>Location</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="w-full border-burgundy text-burgundy hover:bg-burgundy/5 bg-transparent mt-auto"
+                      >
+                        Learn More
+                      </Button>
+                    </CardContent>
                   </Card>
                 </a>
               ))}

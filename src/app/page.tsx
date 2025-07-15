@@ -187,18 +187,6 @@ export default function HomePage() {
           <p className="text-xl mb-8 opacity-90">
             Explore events, activities, historical sites, and the best food & drink spots in Romania's vibrant capital
           </p>
-          <div className="flex gap-4 justify-center">
-            <Button size="lg" className="bg-white text-burgundy hover:bg-gray-100">
-              Plan my trip →
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-burgundy bg-transparent"
-            >
-              Explore Now
-            </Button>
-          </div>
         </div>
       </section>
 
