@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "components/ui/button";
 import { useUser } from "@clerk/nextjs";
+import { Heart } from "lucide-react";
 
 function GoogleMap({ lat, lng, title }: { lat: number; lng: number; title: string }) {
   useEffect(() => {
@@ -69,6 +70,8 @@ export default function DetailsPage() {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewError, setReviewError] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [wishlistItem, setWishlistItem] = useState<any>(null);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -106,6 +109,46 @@ export default function DetailsPage() {
     }
     if (id) fetchReviews();
   }, [id]);
+
+  // Fetch wishlist status for this item
+  useEffect(() => {
+    async function fetchWishlist() {
+      if (!isSignedIn) return setWishlistItem(null);
+      setWishlistLoading(true);
+      const res = await fetch(`/api/wishlist?targetType=${type}&targetId=${id}`);
+      if (res.ok) {
+        const items = await res.json();
+        setWishlistItem(items.find((w: any) => w.targetId === id) || null);
+      } else {
+        setWishlistItem(null);
+      }
+      setWishlistLoading(false);
+    }
+    if (id && type && isSignedIn) fetchWishlist();
+  }, [id, type, isSignedIn]);
+
+  async function toggleWishlist() {
+    if (!isSignedIn) return;
+    setWishlistLoading(true);
+    if (wishlistItem) {
+      // Remove from wishlist
+      await fetch("/api/wishlist", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetType: type, targetId: id })
+      });
+      setWishlistItem(null);
+    } else {
+      // Add to wishlist
+      const res = await fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetType: type, targetId: id })
+      });
+      setWishlistItem(res.ok ? await res.json() : null);
+    }
+    setWishlistLoading(false);
+  }
 
   async function handleBuyTicket() {
     setBuying(true);
@@ -173,7 +216,24 @@ export default function DetailsPage() {
           {data.imageUrl && (
             <img src={data.imageUrl} alt={data.title || data.name} className="w-full h-64 object-cover rounded mb-6" />
           )}
-          <h1 className="text-4xl font-bold text-burgundy font-display mb-4">{data.title || data.name}</h1>
+          <div className="flex items-center gap-4 mb-2">
+            <h1 className="text-4xl font-bold text-burgundy font-display">{data.title || data.name}</h1>
+            {isSignedIn && (
+              <button
+                className="ml-2"
+                onClick={toggleWishlist}
+                disabled={wishlistLoading}
+                aria-label={wishlistItem ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <Heart
+                  className={wishlistItem ? "text-red-500 fill-red-500" : "text-gray-400"}
+                  fill={wishlistItem ? "currentColor" : "none"}
+                  strokeWidth={2}
+                  size={28}
+                />
+              </button>
+            )}
+          </div>
           {type === "event" && (
             <div className="flex flex-wrap gap-8 mb-4 text-burgundy/90">
               <div><span className="font-semibold">Date:</span> {new Date(data.startDatetime).toLocaleDateString()}</div>

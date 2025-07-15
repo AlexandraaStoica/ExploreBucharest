@@ -188,3 +188,11 @@ export const questions = pgTable("questions", {
   question: text("question").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
+
+export const wishlist = pgTable("wishlist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id).notNull(),
+  targetType: text("target_type").notNull(), // "event" or "location"
+  targetId: uuid("target_id").notNull(),     // references events.id or locations.id
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});

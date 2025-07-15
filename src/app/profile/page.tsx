@@ -17,11 +17,21 @@ interface Ticket {
   };
 }
 
+interface WishlistItem {
+  id: string;
+  targetType: string;
+  targetId: string;
+  createdAt: string;
+  // Optionally, add more fields if you want to expand
+}
+
 export default function ProfilePage() {
   const { user, isSignedIn, isLoaded } = useUser();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
+  const [wishlistLoading, setWishlistLoading] = useState(true);
 
   useEffect(() => {
     async function fetchTickets() {
@@ -41,6 +51,20 @@ export default function ProfilePage() {
       }
     }
     if (isSignedIn) fetchTickets();
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    async function fetchWishlist() {
+      setWishlistLoading(true);
+      const res = await fetch("/api/wishlist");
+      if (res.ok) {
+        setWishlist(await res.json());
+      } else {
+        setWishlist([]);
+      }
+      setWishlistLoading(false);
+    }
+    if (isSignedIn) fetchWishlist();
   }, [isSignedIn]);
 
   async function handleDownloadPDF(ticket: Ticket) {
@@ -114,6 +138,32 @@ export default function ProfilePage() {
                 >
                   {downloading === ticket.id ? "Generating..." : "Download PDF"}
                 </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow p-8 mt-12">
+        <h2 className="text-2xl font-bold text-burgundy font-display mb-6">My Wishlist</h2>
+        {wishlistLoading ? (
+          <div className="text-burgundy text-lg">Loading wishlist...</div>
+        ) : wishlist.length === 0 ? (
+          <div className="text-burgundy/70">Your wishlist is empty.</div>
+        ) : (
+          <ul className="space-y-4">
+            {wishlist.map(item => (
+              <li key={item.id} className="flex items-center gap-4 bg-cream rounded-lg p-4">
+                <span className="font-semibold text-burgundy capitalize">{item.targetType}</span>
+                <a
+                  href={`/${item.targetType}/${item.targetId}`}
+                  className="text-burgundy font-bold underline hover:text-burgundy/80"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Details
+                </a>
+                <span className="text-gray-500 ml-auto text-xs">Added {new Date(item.createdAt).toLocaleDateString()}</span>
               </li>
             ))}
           </ul>
